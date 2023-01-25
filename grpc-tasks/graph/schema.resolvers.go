@@ -7,13 +7,40 @@ package graph
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/Ronak-Searce/grpc-tasks/graph/model"
+	pb "github.com/Ronak-Searce/grpc-tasks/users/proto"
+	"google.golang.org/grpc"
+)
+
+const (
+	address = "localhost:50051"
 )
 
 // CreatUser is the resolver for the creatUser field.
 func (r *mutationResolver) CreatUser(ctx context.Context, input model.NewUser) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: CreatUser - creatUser"))
+	conn, err := grpc.Dial(address, grpc.WithInsecure(),
+		grpc.WithBlock())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	defer conn.Close()
+	client := pb.NewUsererviceClient(conn)
+
+	req := &pb.UserInfo{FirstName: input.Firstname, LastName: input.Lastnamwe}
+	res, err := client.CreatUser(ctx, req)
+	if err != nil {
+		return &model.User{}, fmt.Errorf("error while creating user: %v", err)
+	}
+	user := &model.User{
+		ID:        res.Id,
+		Firstname: res.FirstName,
+		Lastnamwe: res.LastName,
+	}
+
+	return user, nil
+
 }
 
 // UpdateUser is the resolver for the updateUser field.
